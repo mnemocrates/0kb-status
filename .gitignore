@@ -1,0 +1,9 @@
+# Generated status snapshot
+status/status.json
+
+# macOS
+.DS_Store
+
+# Editor junk
+*.swp
+*.swo

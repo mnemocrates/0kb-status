@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>0kb.io — Node Status</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    body {
+        background: #000;
+        color: #0f0;
+        font-family: monospace;
+        margin: 0;
+        padding: 20px;
+        white-space: pre-wrap;
+    }
+    .divider {
+        color: #0a0; /* dimmer green for comment-like headers */
+        margin: 20px 0 10px 0;
+    }
+    .ok { color: #0f0; }
+    .warn { color: #ff0; }
+    .crit { color: #f33; }
+    .line {
+        margin-bottom: 6px;
+    }
+</style>
+</head>
+<body>
+
+<h1 style="margin:0 0 5px 0; font-size:20px;">0kb.io — Node Status</h1>
+<div id="timestamp" style="color:#0a0; margin-bottom:5px;"></div>
+<div id="checks"></div>
+
+<script>
+function padStatus(s) {
+    if (s === "OK")   return "[  OK  ]";
+    if (s === "WARN") return "[ WARN ]";
+    if (s === "CRIT") return "[ CRIT ]";
+    return "[ ???? ]";
+}
+
+function addDivider(container, text) {
+    const div = document.createElement('div');
+    div.className = 'divider';
+    div.textContent = `# -- ${text} --`;
+    container.appendChild(div);
+}
+
+async function loadStatus() {
+    try {
+        const res = await fetch('/status/status.json', { cache: 'no-store' });
+        const data = await res.json();
+
+        document.getElementById('timestamp').textContent =
+            "Last updated: " + data.timestamp;
+
+        const container = document.getElementById('checks');
+        container.innerHTML = '';
+
+        // --- TOR ---
+        addDivider(container, "tor");
+        ["tor_socks", "tor_circuit", "tor_onion"].forEach(key => {
+            if (data.checks[key]) {
+                const line = document.createElement('div');
+                line.className = "line " + data.checks[key].status.toLowerCase();
+                line.textContent = padStatus(data.checks[key].status) +
+                    " " + key + " — " + data.checks[key].message;
+                container.appendChild(line);
+            }
+        });
+
+        // --- BITCOIN ---
+        addDivider(container, "bitcoin");
+        ["bitcoin_rpc", "bitcoin_blockheight", "bitcoin_mempool"].forEach(key => {
+            if (data.checks[key]) {
+                const line = document.createElement('div');
+                line.className = "line " + data.checks[key].status.toLowerCase();
+                line.textContent = padStatus(data.checks[key].status) +
+                    " " + key + " — " + data.checks[key].message;
+                container.appendChild(line);
+            }
+        });
+
+        // --- ELECTRS ---
+        addDivider(container, "electrs");
+        ["electrs_sync"].forEach(key => {
+            if (data.checks[key]) {
+                const line = document.createElement('div');
+                line.className = "line " + data.checks[key].status.toLowerCase();
+                line.textContent = padStatus(data.checks[key].status) +
+                    " " + key + " — " + data.checks[key].message;
+                container.appendChild(line);
+            }
+        });
+
+        // --- LND CORE ---
+        addDivider(container, "lnd-core");
+        ["lnd_wallet", "lnd_peers", "lnd_channels"].forEach(key => {
+            if (data.checks[key]) {
+                const line = document.createElement('div');
+                line.className = "line " + data.checks[key].status.toLowerCase();
+                line.textContent = padStatus(data.checks[key].status) +
+                    " " + key + " — " + data.checks[key].message;
+                container.appendChild(line);
+            }
+        });
+
+        // --- LND SYNC ---
+        addDivider(container, "lnd-sync");
+        ["lnd_blockheight", "lnd_chain_sync", "lnd_graph_sync"].forEach(key => {
+            if (data.checks[key]) {
+                const line = document.createElement('div');
+                line.className = "line " + data.checks[key].status.toLowerCase();
+                line.textContent = padStatus(data.checks[key].status) +
+                    " " + key + " — " + data.checks[key].message;
+                container.appendChild(line);
+            }
+        });
+
+    } catch (e) {
+        document.getElementById('checks').innerHTML =
+            '<div class="crit">[ CRIT ] Error loading status.json</div>';
+    }
+}
+
+loadStatus();
+setInterval(loadStatus, 30000);
+</script>
+
+</body>
+</html>
